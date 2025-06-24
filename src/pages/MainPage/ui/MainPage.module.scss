@@ -1,0 +1,17 @@
+.mainTabs {
+  display: block;
+  width: 100%;
+}
+
+.mainTabs > :global(.ant-tabs > .ant-tabs-nav) {
+  margin: 0;
+}
+
+.mainTabs > :global(.ant-tabs > .ant-tabs-content-holder) {
+  border: 1px solid #f0f0f0;
+  border-top: none;
+  background-color: #fff;
+  padding: 20px 15px;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
