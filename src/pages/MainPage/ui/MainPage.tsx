@@ -168,11 +168,6 @@ const MainPage = () => {
 
   const tabsItems: TabsProps['items'] = [
     {
-      key: 'chart',
-      label: 'График',
-      children: <BatteryCharts phases={data.phases} selectedPhase={selectedPhase} />,
-    },
-    {
       key: 'summary',
       label: 'Сводка',
       children: (
@@ -240,6 +235,11 @@ const MainPage = () => {
           </Flex>
         </Flex>
       ),
+    },
+    {
+      key: 'chart',
+      label: 'График',
+      children: <BatteryCharts phases={data.phases} selectedPhase={selectedPhase} />,
     },
   ];
 

@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import ReactECharts from 'echarts-for-react';
-import type { Phase } from '@shared/lib/parseCSVFile';
+import type { Phase, CSVDataPoint } from '@shared/lib/parseCSVFile';
 
 const styles = {
   container: {
@@ -56,28 +56,39 @@ const styles = {
   },
 };
 
+interface MarkAreaData {
+  name?: string;
+  xAxis: Date;
+  itemStyle?: {
+    color: string;
+  };
+}
+
+interface TooltipParams {
+  value: [Date, number];
+  seriesName: string;
+  seriesType: string;
+}
+
 const BatteryCharts = ({ phases, selectedPhase }: { phases: Phase[]; selectedPhase: number | 'all' }) => {
-  const analysisData = useMemo(() => {
+  const analysisData = useMemo((): CSVDataPoint[] => {
     if (selectedPhase === 'all') {
-      return Array.isArray(phases) ? phases.reduce((acc, phase) => acc.concat(phase.data), []) : [];
+      return Array.isArray(phases)
+        ? phases.reduce((acc: CSVDataPoint[], phase) => acc.concat(phase.data), [] as CSVDataPoint[])
+        : [];
     }
 
     return phases[selectedPhase]?.data || [];
   }, [phases, selectedPhase]);
 
-  // 1. График напряжения и тока во времени
-  const voltageCurrentOption = useMemo(() => {
-    const timeData = analysisData.map((d) => new Date(d.timestamp * 1000));
-    const voltageData = analysisData.map((d) => d.voltage);
-    const currentData = analysisData.map((d) => d.current);
-
-    // Создаем зоны для фаз
-    const markAreas = [];
+  // Создание общих зон фаз
+  const createPhaseMarkAreas = useMemo((): MarkAreaData[][] => {
+    const markAreas: MarkAreaData[][] = [];
     if (selectedPhase === 'all') {
       phases.forEach((phase) => {
-        if (phase.data.length > 0) {
+        if (phase.data.length > 0 && phase.data[0] && phase.data[phase.data.length - 1]) {
           const startTime = new Date(phase.data[0].timestamp * 1000);
-          const endTime = new Date(phase.data[phase.data.length - 1].timestamp * 1000);
+          const endTime = new Date(phase.data[phase.data.length - 1]!.timestamp * 1000);
           markAreas.push([
             {
               name: phase.label,
@@ -98,6 +109,14 @@ const BatteryCharts = ({ phases, selectedPhase }: { phases: Phase[]; selectedPha
         }
       });
     }
+    return markAreas;
+  }, [phases, selectedPhase]);
+
+  // 1. График напряжения и тока во времени
+  const voltageCurrentOption = useMemo(() => {
+    const timeData = analysisData.map((d) => new Date(d.timestamp * 1000));
+    const voltageData = analysisData.map((d) => d.voltage);
+    const currentData = analysisData.map((d) => d.current);
 
     return {
       title: {
@@ -108,10 +127,11 @@ const BatteryCharts = ({ phases, selectedPhase }: { phases: Phase[]; selectedPha
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'cross' },
-        formatter: function (params) {
+        formatter: function (params: TooltipParams[]) {
+          if (!params[0]) return '';
           const time = new Date(params[0].value[0]).toLocaleTimeString();
           let result = `Время: ${time}<br/>`;
-          params.forEach((param) => {
+          params.forEach((param: TooltipParams) => {
             if (param.seriesType === 'line') {
               result += `${param.seriesName}: ${param.value[1].toFixed(2)} ${param.seriesName === 'Напряжение' ? 'В' : 'А'}<br/>`;
             }
@@ -152,9 +172,9 @@ const BatteryCharts = ({ phases, selectedPhase }: { phases: Phase[]; selectedPha
           smooth: true,
           symbol: 'none',
           markArea:
-            selectedPhase === 'all' && markAreas.length > 0
+            selectedPhase === 'all' && createPhaseMarkAreas.length > 0
               ? {
-                  data: markAreas,
+                  data: createPhaseMarkAreas,
                   silent: true,
                 }
               : undefined,
@@ -176,7 +196,7 @@ const BatteryCharts = ({ phases, selectedPhase }: { phases: Phase[]; selectedPha
       ],
       grid: { top: 80, bottom: 80, left: 80, right: 80 },
     };
-  }, [analysisData, phases, selectedPhase]);
+  }, [analysisData, createPhaseMarkAreas, selectedPhase]);
 
   // 2. График накопленной емкости
   const capacityOption = useMemo(() => {
@@ -192,7 +212,8 @@ const BatteryCharts = ({ phases, selectedPhase }: { phases: Phase[]; selectedPha
       },
       tooltip: {
         trigger: 'axis',
-        formatter: function (params) {
+        formatter: function (params: TooltipParams[]) {
+          if (!params[0]) return '';
           const time = new Date(params[0].value[0]).toLocaleTimeString();
           const capacity = params[0].value[1].toFixed(3);
           return `Время: ${time}<br/>Емкость: ${capacity} Ач`;
@@ -260,10 +281,11 @@ const BatteryCharts = ({ phases, selectedPhase }: { phases: Phase[]; selectedPha
       },
       tooltip: {
         trigger: 'axis',
-        formatter: function (params) {
+        formatter: function (params: TooltipParams[]) {
+          if (!params[0]) return '';
           const time = new Date(params[0].value[0]).toLocaleTimeString();
           let result = `Время: ${time}<br/>`;
-          params.forEach((param) => {
+          params.forEach((param: TooltipParams) => {
             result += `${param.seriesName}: ${param.value[1]} °C<br/>`;
           });
           return result;
@@ -315,33 +337,6 @@ const BatteryCharts = ({ phases, selectedPhase }: { phases: Phase[]; selectedPha
     const tempAkbData = analysisData.map((d) => d.tempAkb);
     const powerVoltageData = analysisData.map((d) => d.powerVoltage);
 
-    const markAreas = [];
-    if (selectedPhase === 'all') {
-      phases.forEach((phase) => {
-        if (phase.data.length > 0) {
-          const startTime = new Date(phase.data[0].timestamp * 1000);
-          const endTime = new Date(phase.data[phase.data.length - 1].timestamp * 1000);
-          markAreas.push([
-            {
-              name: phase.label,
-              xAxis: startTime,
-              itemStyle: {
-                color:
-                  phase.type === 'charge'
-                    ? 'rgba(82, 196, 26, 0.1)'
-                    : phase.type === 'discharge'
-                      ? 'rgba(245, 34, 45, 0.1)'
-                      : 'rgba(250, 173, 20, 0.1)',
-              },
-            },
-            {
-              xAxis: endTime,
-            },
-          ]);
-        }
-      });
-    }
-
     return {
       title: {
         left: 'center',
@@ -350,37 +345,38 @@ const BatteryCharts = ({ phases, selectedPhase }: { phases: Phase[]; selectedPha
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'cross' },
-        formatter: function (params) {
+        formatter: function (params: TooltipParams[]) {
+          if (!params[0]) return '';
           const time = new Date(params[0].value[0]).toLocaleTimeString();
           let result = `Время: ${time}<br/>`;
 
-          params.forEach((param) => {
+          params.forEach((param: TooltipParams) => {
             if (param.seriesType === 'line') {
               let unit = '';
-              let value = param.value[1];
+              let valueStr = '';
 
               switch (param.seriesName) {
                 case 'Напряжение АКБ':
                 case 'Напряжение БП':
                   unit = 'В';
-                  value = value.toFixed(2);
+                  valueStr = param.value[1].toFixed(2);
                   break;
                 case 'Ток АКБ':
                   unit = 'А';
-                  value = value.toFixed(2);
+                  valueStr = param.value[1].toFixed(2);
                   break;
                 case 'Емкость':
                   unit = 'Ач';
-                  value = value.toFixed(3);
+                  valueStr = param.value[1].toFixed(3);
                   break;
                 case 'Температура Q1':
                 case 'Температура АКБ':
                   unit = '°C';
-                  value = value.toFixed(1);
+                  valueStr = param.value[1].toFixed(1);
                   break;
               }
 
-              result += `${param.seriesName}: ${value} ${unit}<br/>`;
+              result += `${param.seriesName}: ${valueStr} ${unit}<br/>`;
             }
           });
           return result;
@@ -444,9 +440,9 @@ const BatteryCharts = ({ phases, selectedPhase }: { phases: Phase[]; selectedPha
           symbol: 'none',
           emphasis: { lineStyle: { width: 4 } },
           markArea:
-            selectedPhase === 'all' && markAreas.length > 0
+            selectedPhase === 'all' && createPhaseMarkAreas.length > 0
               ? {
-                  data: markAreas,
+                  data: createPhaseMarkAreas,
                   silent: true,
                 }
               : undefined,
@@ -513,7 +509,7 @@ const BatteryCharts = ({ phases, selectedPhase }: { phases: Phase[]; selectedPha
         right: 235,
       },
     };
-  }, [analysisData, phases, selectedPhase]);
+  }, [analysisData, createPhaseMarkAreas]);
 
   return (
     <div style={styles.container}>
