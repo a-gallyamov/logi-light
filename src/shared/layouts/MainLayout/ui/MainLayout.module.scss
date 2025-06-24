@@ -1,0 +1,9 @@
+.content {
+  padding: 0 48px;
+  height: 100%;
+  overflow: auto;
+
+  @media (max-width: 550px) {
+    padding: 0 15px;
+  }
+}

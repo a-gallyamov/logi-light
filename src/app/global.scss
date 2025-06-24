@@ -1,0 +1,16 @@
+.inheritColor {
+	color: inherit;
+
+	&:hover {
+		color: inherit;
+	}
+}
+
+.whiteColor {
+	color: #fff;
+}
+
+#root,
+.inheritHeight {
+	height: inherit;
+}
