@@ -85,7 +85,7 @@ const BatteryCharts = ({ phases, selectedPhase }: { phases: Phase[]; selectedPha
   const createPhaseMarkAreas = useMemo((): MarkAreaData[][] => {
     const markAreas: MarkAreaData[][] = [];
     if (selectedPhase === 'all') {
-      phases.forEach((phase) => {
+      phases?.forEach((phase) => {
         if (phase.data.length > 0 && phase.data[0] && phase.data[phase.data.length - 1]) {
           const startTime = new Date(phase.data[0].timestamp * 1000);
           const endTime = new Date(phase.data[phase.data.length - 1]!.timestamp * 1000);

@@ -19,18 +19,23 @@ import {
 const { Title } = Typography;
 const { Option } = Select;
 
-import csvFile from './file1.csv?raw';
 import { parseCSVFile } from '@shared/lib/parseCSVFile';
 import BatteryCharts from '@entities/BatteryCharts/BatteryCharts';
 
+interface StatsAndChartsProps {
+  csvData?: string;
+}
+
 const isNumber = (value: unknown) => Boolean(typeof value === 'number');
 
-const StatsAndCharts = () => {
+const StatsAndCharts = ({ csvData }: StatsAndChartsProps = {}) => {
   const [selectedPhase, setSelectedPhase] = useState<'all' | number>('all');
 
   const data = useMemo(() => {
-    return parseCSVFile(csvFile, selectedPhase);
-  }, [selectedPhase]);
+    if (!csvData) return;
+
+    return parseCSVFile(csvData, selectedPhase);
+  }, [csvData, selectedPhase]);
 
   const phaseColumns: TableProps['columns'] = [
     {
@@ -140,7 +145,7 @@ const StatsAndCharts = () => {
     if (selectedPhase === 'all') {
       return 'Весь цикл';
     }
-    const phase = data.phases?.[selectedPhase as number];
+    const phase = data?.phases?.[selectedPhase as number];
     return phase ? phase.label : 'Неизвестная фаза';
   };
 
@@ -148,7 +153,7 @@ const StatsAndCharts = () => {
     {
       key: '1',
       label: 'Обнаруженные фазы',
-      children: data.phasesSummary && data.phasesSummary.length > 1 && (
+      children: data?.phasesSummary && data.phasesSummary.length > 1 && (
         <div style={{ width: '100%' }}>
           <Title level={5}>Обнаруженные фазы</Title>
           <Table
@@ -177,42 +182,42 @@ const StatsAndCharts = () => {
 
             <Descriptions
               title={selectedPhase === 'all' ? 'Сводка полного цикла' : `Сводка фазы: ${getSelectedPhaseLabel()}`}
-              items={data.chargeSummary.component ?? []}
+              items={data?.chargeSummary.component ?? []}
               bordered
               styles={{ label: { width: 237 } }}
             />
 
             <Descriptions
               title="Эффективность"
-              items={data.efficiency.component ?? []}
+              items={data?.efficiency.component ?? []}
               bordered
               styles={{ label: { width: 237 } }}
             />
 
             <Descriptions
               title="Качество питания"
-              items={data.powerQuality.component ?? []}
+              items={data?.powerQuality.component ?? []}
               bordered
               styles={{ label: { width: 237 } }}
-              style={{ display: data.powerQuality.component?.length === 0 ? 'none' : undefined }}
+              style={{ display: data?.powerQuality.component?.length === 0 ? 'none' : undefined }}
             />
 
             <Descriptions
               title="Расчетные параметры"
-              items={data.calculatedParams.component ?? []}
+              items={data?.calculatedParams.component ?? []}
               bordered
               styles={{ label: { width: 237 } }}
             />
 
             {/* Показываем фазы CC/CV только для фаз заряда */}
-            {(selectedPhase === 'all' || (isNumber(selectedPhase) && data.phases?.[selectedPhase]?.type === 'charge')) && (
+            {(selectedPhase === 'all' || (isNumber(selectedPhase) && data?.phases?.[selectedPhase]?.type === 'charge')) && (
               <Flex vertical style={{ width: '100%' }}>
                 <Title level={5}>{selectedPhase === 'all' ? 'Фазы заряда' : 'Подфазы заряда (CC/CV)'}</Title>
                 <Table
                   style={{ width: '100%' }}
                   pagination={false}
                   columns={phaseColumns}
-                  dataSource={data.ccCvPhases}
+                  dataSource={data?.ccCvPhases}
                   bordered
                   rowHoverable
                   size="small"
@@ -226,7 +231,7 @@ const StatsAndCharts = () => {
                 style={{ width: '100%' }}
                 pagination={false}
                 columns={tempColumns}
-                dataSource={data.thermalCharacteristics}
+                dataSource={data?.thermalCharacteristics}
                 bordered
                 rowHoverable
                 size="small"
@@ -239,7 +244,7 @@ const StatsAndCharts = () => {
     {
       key: 'chart',
       label: 'График',
-      children: <BatteryCharts phases={data.phases} selectedPhase={selectedPhase} />,
+      children: <BatteryCharts phases={Array.isArray(data?.phases) ? data.phases : []} selectedPhase={selectedPhase} />,
     },
   ];
 
@@ -258,7 +263,7 @@ const StatsAndCharts = () => {
           placeholder="Выберите фазу для анализа"
         >
           <Option value="all">🔄 Весь цикл</Option>
-          {data.phases?.map((phase, index) => (
+          {data?.phases?.map((phase, index) => (
             <Option key={index} value={index}>
               {phase.label} ({phase.data.length} точек)
             </Option>
