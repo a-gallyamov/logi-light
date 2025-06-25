@@ -8,7 +8,9 @@
 		"dev": "vite",
 		"lint:tsc": "tsc -b",
 		"build": "vite build",
-		"preview": "vite preview"
+		"preview": "vite preview",
+		"predeploy": "npm build",
+		"deploy": "gh-pages -d dist"
 	},
 	"dependencies": {
 		"@ant-design/icons": "~6.0.0",
@@ -31,6 +33,7 @@
 		"eslint": "^8.57.0",
 		"eslint-kit": "^11.0.0",
 		"eslint-plugin-react-refresh": "^0.4.20",
+		"gh-pages": "^6.3.0",
 		"prettier": "^3.0.0",
 		"sass-embedded": "^1.89.2",
 		"typescript": "5.8.3",
