@@ -1,0 +1,1 @@
+import{H as t,J as s,L as e,M as a}from"./index-DHCi_bR4.js";const n=()=>t.jsx(s,{status:"warning",title:"Раздел не найден",extra:t.jsx(e,{type:"default",size:"large",children:t.jsx(a,{to:"/",children:"На главную"})})});export{n as default};

@@ -1,0 +1,11 @@
+node_modules/
+dist/
+dist
+build
+build/
+coverage
+node_modules
+*.html
+*.css
+*.scss
+.yarn
