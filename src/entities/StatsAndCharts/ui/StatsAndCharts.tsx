@@ -307,7 +307,7 @@ const StatsAndCharts = memo(({ csvData, fileId }: StatsAndChartsProps) => {
 
   return (
     <ContentContainer>
-      <Collapse items={collapsedItems} />
+      {Boolean(data?.phasesSummary && data.phasesSummary.length > 1) && <Collapse items={collapsedItems} />}
 
       <Space direction="vertical" style={{ width: '100%', margin: '20px 0' }}>
         <Title level={5}>Выбор фазы для анализа</Title>
