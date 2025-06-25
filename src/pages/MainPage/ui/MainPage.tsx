@@ -1,12 +1,10 @@
-import { useState, type MouseEvent, type KeyboardEvent, useMemo, useCallback } from 'react';
-import { Tabs, type TabsProps, type UploadFile } from 'antd';
-import { v4 as uuid } from 'uuid';
-
+import { ImportCsv } from '@entities/ImportCSV';
 import { StatsAndCharts } from '@entities/StatsAndCharts';
 import { ContentContainer } from '@shared/ui/ContentContainer';
-
+import { Tabs, type TabsProps, type UploadFile } from 'antd';
+import { type KeyboardEvent, type MouseEvent, useCallback, useMemo, useState } from 'react';
+import { v4 as uuid } from 'uuid';
 import cls from './MainPage.module.scss';
-import { ImportCsv } from '@entities/ImportCSV';
 
 const MainPage = () => {
   const handleDragFile = useCallback(({ fileList }: { fileList: UploadFile[] }) => {
@@ -14,7 +12,7 @@ const MainPage = () => {
     if (!file?.originFileObj) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.addEventListener('load', (e) => {
       const csvContent = e.target?.result as string;
       if (csvContent) {
         const newTabKey = uuid();
@@ -30,14 +28,14 @@ const MainPage = () => {
         setItems((prev) => [newTab, ...prev]);
         setActiveKey(newTabKey);
       }
-    };
+    });
 
     reader.readAsText(file?.originFileObj);
   }, []);
 
   const initialItems: TabsProps['items'] = useMemo(
     () => [{ label: 'Импортировать файл', children: <ImportCsv onDropFile={handleDragFile} />, key: '2', closable: false }],
-    [],
+    [handleDragFile],
   );
 
   const [activeKey, setActiveKey] = useState(initialItems?.[0]?.key);
@@ -74,4 +72,5 @@ const MainPage = () => {
   );
 };
 
+// eslint-disable-next-line import-x/no-default-export
 export default MainPage;

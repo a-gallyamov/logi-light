@@ -1,4 +1,4 @@
-const { configure, presets } = require('eslint-kit')
+const { configure, presets } = require('eslint-kit');
 
 const prettierConfig = {
   printWidth: 130,
@@ -8,7 +8,7 @@ const prettierConfig = {
   trailingComma: 'all',
   bracketSpacing: true,
   jsxBracketSameLine: false,
-}
+};
 
 module.exports = configure({
   allowDebug: process.env.NODE_ENV !== 'production',
@@ -23,11 +23,19 @@ module.exports = configure({
   ],
   extend: {
     plugins: ['react-refresh', 'react-hooks'],
+    parserOptions: {
+      project: ['./tsconfig.app.json'],
+      tsconfigRootDir: __dirname,
+    },
+    settings: {
+      'import-x/resolver': {
+        typescript: {
+          project: './tsconfig.app.json',
+        },
+      },
+    },
     rules: {
-      'react-refresh/only-export-components': [
-        'warn',
-        { allowConstantExport: true },
-      ],
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       '@typescript-eslint/no-unused-vars': [
         'warn',
         {
@@ -56,4 +64,4 @@ module.exports = configure({
       'react-hooks/exhaustive-deps': ['warn'],
     },
   },
-})
+});

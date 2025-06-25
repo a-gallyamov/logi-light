@@ -1,9 +1,8 @@
 import { HeaderWidget } from '@widgets/HeaderWidget';
 import { Flex, Layout } from 'antd';
 import type { ReactNode } from 'react';
-import { VERSION } from '@app/constants';
 import { Outlet } from 'react-router';
-
+import { VERSION } from '@app/constants';
 import cls from './MainLayout.module.scss';
 
 const { Content } = Layout;
@@ -26,4 +25,5 @@ const MainLayout = ({ children }: { children?: ReactNode }) => {
   );
 };
 
+// eslint-disable-next-line import-x/no-default-export
 export default MainLayout;

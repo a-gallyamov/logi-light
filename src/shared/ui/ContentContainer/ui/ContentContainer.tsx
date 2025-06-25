@@ -1,5 +1,5 @@
-import cls from './ContentContainer.module.scss';
 import type { ReactNode } from 'react';
+import cls from './ContentContainer.module.scss';
 
 export const ContentContainer = ({ children }: { children: ReactNode }) => {
   return (

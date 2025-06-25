@@ -1,26 +1,25 @@
-import { memo, useState, useMemo, useEffect, useCallback } from 'react';
+import BatteryCharts from '@entities/BatteryCharts/BatteryCharts';
+import { parseCSVFile } from '@shared/lib/parseCSVFile';
 import { ContentContainer } from '@shared/ui/ContentContainer';
 import {
-  Typography,
-  Descriptions,
-  Flex,
-  type TableProps,
-  Table,
-  Select,
   Alert,
-  Space,
+  Card,
   Collapse,
   type CollapseProps,
-  type TabsProps,
+  Descriptions,
+  Flex,
+  Select,
+  Space,
+  Table,
+  type TableProps,
   Tabs,
-  Card,
+  type TabsProps,
+  Typography,
 } from 'antd';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 const { Title } = Typography;
 const { Option } = Select;
-
-import { parseCSVFile } from '@shared/lib/parseCSVFile';
-import BatteryCharts from '@entities/BatteryCharts/BatteryCharts';
 
 interface StatsAndChartsProps {
   fileId: string;
@@ -52,7 +51,7 @@ const StatsAndCharts = memo(({ csvData, fileId }: StatsAndChartsProps) => {
       console.warn('Ошибка загрузки состояния из sessionStorage:', error);
     }
     return { activeTab: 'summary', selectedPhase: 'all' };
-  }, []);
+  }, [STORAGE_KEY]);
 
   const savedState = loadSavedState();
   const [selectedPhase, setSelectedPhase] = useState<'all' | number>(savedState.selectedPhase);
@@ -196,7 +195,7 @@ const StatsAndCharts = memo(({ csvData, fileId }: StatsAndChartsProps) => {
     }
     const phase = data?.phases?.[selectedPhase as number];
     return phase ? phase.label : 'Неизвестная фаза';
-  }, []);
+  }, [data?.phases, selectedPhase]);
 
   const handleTabChange = useCallback((key: string) => {
     setActiveTab(key);
@@ -224,7 +223,7 @@ const StatsAndCharts = memo(({ csvData, fileId }: StatsAndChartsProps) => {
         ),
       },
     ],
-    [],
+    [data?.phasesSummary, phaseSummaryColumns],
   );
 
   const tabsItems: TabsProps['items'] = useMemo(
@@ -302,7 +301,19 @@ const StatsAndCharts = memo(({ csvData, fileId }: StatsAndChartsProps) => {
         children: <BatteryCharts phases={Array.isArray(data?.phases) ? data.phases : []} selectedPhase={selectedPhase} />,
       },
     ],
-    [],
+    [
+      data?.calculatedParams.component,
+      data?.ccCvPhases,
+      data?.chargeSummary.component,
+      data?.efficiency.component,
+      data?.phases,
+      data?.powerQuality.component,
+      data?.thermalCharacteristics,
+      getSelectedPhaseLabel,
+      phaseColumns,
+      selectedPhase,
+      tempColumns,
+    ],
   );
 
   return (
@@ -320,9 +331,9 @@ const StatsAndCharts = memo(({ csvData, fileId }: StatsAndChartsProps) => {
           placeholder="Выберите фазу для анализа"
         >
           <Option value="all">🔄 Весь цикл</Option>
-          {data?.phases?.map((phase, index) => (
-            <Option key={index} value={index}>
-              {phase.label} ({phase.data.length} точек)
+          {data?.phases?.map(({ label, type, startIndex, endIndex, data }, index) => (
+            <Option key={`${type}_${label}_${startIndex}_${endIndex}`} value={index}>
+              {label} ({data.length} точек)
             </Option>
           ))}
         </Select>
@@ -339,4 +350,5 @@ const StatsAndCharts = memo(({ csvData, fileId }: StatsAndChartsProps) => {
   );
 });
 
+// eslint-disable-next-line import-x/no-default-export
 export default StatsAndCharts;

@@ -15,4 +15,5 @@ const NotFoundPage = () => {
   );
 };
 
+// eslint-disable-next-line import-x/no-default-export
 export default NotFoundPage;

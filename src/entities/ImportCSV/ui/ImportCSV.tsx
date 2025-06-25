@@ -1,14 +1,14 @@
-import React from 'react';
 import { FileAddOutlined } from '@ant-design/icons';
 import { Collapse, type CollapseProps, Space, Table, type TableProps, type UploadFile } from 'antd';
-import { Upload, Typography } from 'antd';
+import { Typography, Upload } from 'antd';
+import React from 'react';
 
 const { Dragger } = Upload;
 const { Text, Paragraph } = Typography;
 
-export type TImportCsvProps = {
+export interface TImportCsvProps {
   onDropFile: ({ fileList }: { fileList: UploadFile[] }) => void;
-};
+}
 
 const columns: TableProps['columns'] = [
   {
@@ -135,4 +135,5 @@ const ImportCsv = ({ onDropFile }: TImportCsvProps) => {
   );
 };
 
+// eslint-disable-next-line import-x/no-default-export
 export default ImportCsv;

@@ -1,60 +1,7 @@
-import React, { memo, useMemo } from 'react';
+import type { CSVDataPoint, Phase } from '@shared/lib/parseCSVFile';
 import ReactECharts from 'echarts-for-react';
-import type { Phase, CSVDataPoint } from '@shared/lib/parseCSVFile';
-
-const styles = {
-  container: {
-    padding: '1px 20px 20px 20px',
-    backgroundColor: '#f5f5f5',
-  },
-  title: {
-    fontSize: '24px',
-    fontWeight: '600',
-    marginBottom: '20px',
-    color: '#262626',
-  },
-  sectionTitle: {
-    fontSize: '16px',
-    fontWeight: '500',
-    marginBottom: '12px',
-    color: '#595959',
-  },
-  select: {
-    width: '100%',
-    maxWidth: '400px',
-    padding: '8px 12px',
-    borderRadius: '6px',
-    border: '1px solid #d9d9d9',
-    fontSize: '14px',
-    backgroundColor: '#fff',
-  },
-  grid: {
-    display: 'grid',
-    gap: '16px',
-    marginTop: '20px',
-  },
-  gridCols1: {
-    gridTemplateColumns: '1fr',
-  },
-  gridCols2: {
-    gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-  },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: '8px',
-    padding: '16px',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-    border: '1px solid #f0f0f0',
-  },
-  cardTitle: {
-    fontSize: '16px',
-    fontWeight: '500',
-    marginBottom: '16px',
-    color: '#262626',
-    borderBottom: '1px solid #f0f0f0',
-    paddingBottom: '8px',
-  },
-};
+import React, { memo, useMemo } from 'react';
+import cls from './BatteryCharts.module.scss';
 
 interface MarkAreaData {
   name?: string;
@@ -89,17 +36,14 @@ const BatteryCharts = memo(({ phases, selectedPhase }: { phases: Phase[]; select
         if (phase.data.length > 0 && phase.data[0] && phase.data[phase.data.length - 1]) {
           const startTime = new Date(phase.data[0].timestamp * 1000);
           const endTime = new Date(phase.data[phase.data.length - 1]!.timestamp * 1000);
+          const dischargeColor = phase.type === 'discharge' ? 'rgba(245, 34, 45, 0.1)' : 'rgba(250, 173, 20, 0.1)';
+
           markAreas.push([
             {
               name: phase.label,
               xAxis: startTime,
               itemStyle: {
-                color:
-                  phase.type === 'charge'
-                    ? 'rgba(82, 196, 26, 0.1)'
-                    : phase.type === 'discharge'
-                      ? 'rgba(245, 34, 45, 0.1)'
-                      : 'rgba(250, 173, 20, 0.1)',
+                color: phase.type === 'charge' ? 'rgba(82, 196, 26, 0.1)' : dischargeColor,
               },
             },
             {
@@ -127,7 +71,7 @@ const BatteryCharts = memo(({ phases, selectedPhase }: { phases: Phase[]; select
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'cross' },
-        formatter: function (params: TooltipParams[]) {
+        formatter(params: TooltipParams[]) {
           if (!params[0]) return '';
           const time = new Date(params[0].value[0]).toLocaleTimeString();
           let result = `Время: ${time}<br/>`;
@@ -212,7 +156,7 @@ const BatteryCharts = memo(({ phases, selectedPhase }: { phases: Phase[]; select
       },
       tooltip: {
         trigger: 'axis',
-        formatter: function (params: TooltipParams[]) {
+        formatter(params: TooltipParams[]) {
           if (!params[0]) return '';
           const time = new Date(params[0].value[0]).toLocaleTimeString();
           const capacity = params[0].value[1].toFixed(3);
@@ -281,7 +225,7 @@ const BatteryCharts = memo(({ phases, selectedPhase }: { phases: Phase[]; select
       },
       tooltip: {
         trigger: 'axis',
-        formatter: function (params: TooltipParams[]) {
+        formatter(params: TooltipParams[]) {
           if (!params[0]) return '';
           const time = new Date(params[0].value[0]).toLocaleTimeString();
           let result = `Время: ${time}<br/>`;
@@ -345,7 +289,7 @@ const BatteryCharts = memo(({ phases, selectedPhase }: { phases: Phase[]; select
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'cross' },
-        formatter: function (params: TooltipParams[]) {
+        formatter(params: TooltipParams[]) {
           if (!params[0]) return '';
           const time = new Date(params[0].value[0]).toLocaleTimeString();
           let result = `Время: ${time}<br/>`;
@@ -374,6 +318,8 @@ const BatteryCharts = memo(({ phases, selectedPhase }: { phases: Phase[]; select
                   unit = '°C';
                   valueStr = param.value[1].toFixed(1);
                   break;
+
+                default:
               }
 
               result += `${param.seriesName}: ${valueStr} ${unit}<br/>`;
@@ -509,31 +455,31 @@ const BatteryCharts = memo(({ phases, selectedPhase }: { phases: Phase[]; select
         right: 235,
       },
     };
-  }, [analysisData, createPhaseMarkAreas]);
+  }, [analysisData, createPhaseMarkAreas, selectedPhase]);
 
   return (
-    <div style={styles.container}>
-      <div style={{ ...styles.grid, ...styles.gridCols1 }}>
-        <div style={styles.card}>
-          <h3 style={styles.cardTitle}>Напряжение и ток во времени</h3>
+    <div className={cls.container}>
+      <div className={`${cls.grid} ${cls.gridCols1}`}>
+        <div className={cls.card}>
+          <h3 className={cls.cardTitle}>Напряжение и ток во времени</h3>
           <ReactECharts option={voltageCurrentOption} style={{ height: '400px' }} />
         </div>
       </div>
 
-      <div style={{ ...styles.grid, ...styles.gridCols2 }}>
-        <div style={styles.card}>
-          <h3 style={styles.cardTitle}>Накопленная емкость</h3>
+      <div className={`${cls.grid} ${cls.gridCols2}`}>
+        <div className={cls.card}>
+          <h3 className={cls.cardTitle}>Накопленная емкость</h3>
           <ReactECharts option={capacityOption} style={{ height: '350px' }} />
         </div>
-        <div style={styles.card}>
-          <h3 style={styles.cardTitle}>Температурные характеристики</h3>
+        <div className={cls.card}>
+          <h3 className={cls.cardTitle}>Температурные характеристики</h3>
           <ReactECharts option={temperatureOption} style={{ height: '350px' }} />
         </div>
       </div>
 
-      <div style={{ ...styles.grid, ...styles.gridCols1 }}>
-        <div style={styles.card}>
-          <h3 style={styles.cardTitle}>Общий</h3>
+      <div className={`${cls.grid} ${cls.gridCols1}`}>
+        <div className={cls.card}>
+          <h3 className={cls.cardTitle}>Общий</h3>
           <ReactECharts option={extendedAnalysisOption} style={{ height: '500px' }} />
         </div>
       </div>
@@ -541,4 +487,5 @@ const BatteryCharts = memo(({ phases, selectedPhase }: { phases: Phase[]; select
   );
 });
 
+// eslint-disable-next-line import-x/no-default-export
 export default BatteryCharts;

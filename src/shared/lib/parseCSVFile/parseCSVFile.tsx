@@ -1,4 +1,5 @@
 import { type DescriptionsProps, Typography } from 'antd';
+
 const { Text } = Typography;
 
 export interface CSVDataPoint {
@@ -87,7 +88,7 @@ function parseCSV(csvContent: string | unknown): CSVDataPoint[] {
   const data: CSVDataPoint[] = [];
 
   for (const line of lines) {
-    if (!line || !line.trim()) continue;
+    if (!line?.trim()) continue;
 
     const parts = line.split(';').map((part) => part.trim().replace(/[\r\n]/g, ''));
     if (parts.length < 7) continue;
@@ -95,21 +96,21 @@ function parseCSV(csvContent: string | unknown): CSVDataPoint[] {
     const [timestamp, voltage, current, ah, powerVoltage, tempQ1, tempAkb] = parts;
 
     // Заменяем запятые на точки для корректного парсинга чисел
-    const voltageNum = voltage ? parseFloat(voltage?.replace(',', '.')) : 0;
-    const currentNum = current ? parseFloat(current.replace(',', '.')) : 0;
-    const ahNum = ah ? parseFloat(ah.replace(',', '.')) : 0;
-    const powerVoltageNum = powerVoltage ? parseFloat(powerVoltage.replace(',', '.')) : 0;
-    const tempQ1Num = tempQ1 ? parseInt(tempQ1) : 0;
-    const tempAkbNum = tempAkb ? parseInt(tempAkb) : 0;
+    const voltageNum = voltage ? Number.parseFloat(voltage?.replace(',', '.')) : 0;
+    const currentNum = current ? Number.parseFloat(current.replace(',', '.')) : 0;
+    const ahNum = ah ? Number.parseFloat(ah.replace(',', '.')) : 0;
+    const powerVoltageNum = powerVoltage ? Number.parseFloat(powerVoltage.replace(',', '.')) : 0;
+    const tempQ1Num = tempQ1 ? Number.parseInt(tempQ1, 10) : 0;
+    const tempAkbNum = tempAkb ? Number.parseInt(tempAkb, 10) : 0;
 
     data.push({
-      timestamp: timestamp ? parseInt(timestamp) : 0,
-      voltage: isNaN(voltageNum) ? 0 : voltageNum,
-      current: isNaN(currentNum) ? 0 : currentNum,
-      ah: isNaN(ahNum) ? 0 : ahNum,
-      powerVoltage: isNaN(powerVoltageNum) ? 0 : powerVoltageNum,
-      tempQ1: isNaN(tempQ1Num) ? 0 : tempQ1Num,
-      tempAkb: isNaN(tempAkbNum) ? 0 : tempAkbNum,
+      timestamp: timestamp ? Number.parseInt(timestamp, 10) : 0,
+      voltage: Number.isNaN(voltageNum) ? 0 : voltageNum,
+      current: Number.isNaN(currentNum) ? 0 : currentNum,
+      ah: Number.isNaN(ahNum) ? 0 : ahNum,
+      powerVoltage: Number.isNaN(powerVoltageNum) ? 0 : powerVoltageNum,
+      tempQ1: Number.isNaN(tempQ1Num) ? 0 : tempQ1Num,
+      tempAkb: Number.isNaN(tempAkbNum) ? 0 : tempAkbNum,
     });
   }
 
@@ -196,7 +197,7 @@ function getPhaseLabel(phaseType: 'discharge' | 'rest' | 'charge'): string {
 
 // Форматирование времени
 function formatTime(seconds: number): string {
-  if (!isFinite(seconds) || seconds < 0) seconds = 0;
+  if (!Number.isFinite(seconds) || seconds < 0) seconds = 0;
 
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
@@ -222,8 +223,8 @@ function formatDateTime(timestamp: number): string {
 // Создание сводки по фазам
 function createPhasesSummary(phases: Phase[]): PhaseSummaryData[] {
   return phases.map((phase, index) => {
-    const currents = phase.data.map((p) => Math.abs(p.current)).filter((c) => isFinite(c));
-    const voltages = phase.data.map((p) => p.voltage).filter((v) => isFinite(v));
+    const currents = phase.data.map((p) => Math.abs(p.current)).filter((c) => Number.isFinite(c));
+    const voltages = phase.data.map((p) => p.voltage).filter((v) => Number.isFinite(v));
 
     const avgCurrent = currents.length > 0 ? currents.reduce((sum, c) => sum + c, 0) / currents.length : 0;
 
@@ -264,16 +265,16 @@ function calculateChargeSummary(data: CSVDataPoint[]): { data: ChargeSummary; co
   const finalVoltage = lastPoint.voltage;
 
   // Максимальный и минимальный ток
-  const currents = data.map((p) => Math.abs(p.current)).filter((c) => c > 0 && isFinite(c));
+  const currents = data.map((p) => Math.abs(p.current)).filter((c) => c > 0 && Number.isFinite(c));
   const maxCurrent = currents.length > 0 ? Math.max(...currents) : 0;
   const minCurrent = currents.length > 0 ? Math.min(...currents) : 0;
 
   // Накопленная емкость
-  const capacities = data.map((p) => p.ah).filter((ah) => isFinite(ah));
+  const capacities = data.map((p) => p.ah).filter((ah) => Number.isFinite(ah));
   const accumulatedCapacity = capacities.length > 0 ? Math.max(...capacities) : 0;
 
   // Средняя мощность
-  const powers = data.map((p) => Math.abs(p.voltage * p.current)).filter((p) => p > 0 && isFinite(p));
+  const powers = data.map((p) => Math.abs(p.voltage * p.current)).filter((p) => p > 0 && Number.isFinite(p));
   const averagePower = powers.length > 0 ? powers.reduce((sum, p) => sum + p, 0) / powers.length : 0;
 
   const result: ChargeSummary = {
@@ -337,7 +338,7 @@ function calculateChargeSummary(data: CSVDataPoint[]): { data: ChargeSummary; co
 
 // Качество питания
 function calculatePowerQuality(data: CSVDataPoint[]): { data: PowerQuality; component: DescriptionsProps['items'] } {
-  const powerVoltages = data.map((p) => p.powerVoltage).filter((v) => v > 0 && isFinite(v));
+  const powerVoltages = data.map((p) => p.powerVoltage).filter((v) => v > 0 && Number.isFinite(v));
 
   if (powerVoltages.length === 0) {
     const result: PowerQuality = {
@@ -352,7 +353,7 @@ function calculatePowerQuality(data: CSVDataPoint[]): { data: PowerQuality; comp
   const averagePowerVoltage = powerVoltages.reduce((sum, v) => sum + v, 0) / powerVoltages.length;
 
   // Расчет стандартного отклонения для пульсаций
-  const variance = powerVoltages.reduce((sum, v) => sum + Math.pow(v - averagePowerVoltage, 2), 0) / powerVoltages.length;
+  const variance = powerVoltages.reduce((sum, v) => sum + (v - averagePowerVoltage) ** 2, 0) / powerVoltages.length;
   const standardDeviation = Math.sqrt(Math.max(0, variance));
 
   const maxVoltage = Math.max(...powerVoltages);
@@ -410,7 +411,7 @@ function calculateEfficiency(data: CSVDataPoint[]): { data: Efficiency; componen
 
   const totalTimeHours = (lastPoint.timestamp - firstPoint.timestamp) / 3600;
 
-  const capacities = data.map((p) => p.ah).filter((ah) => isFinite(ah));
+  const capacities = data.map((p) => p.ah).filter((ah) => Number.isFinite(ah));
   const maxCapacity = capacities.length > 0 ? Math.max(...capacities) : 0;
   const chargeRate = totalTimeHours > 0 ? maxCapacity / totalTimeHours : 0;
 
@@ -423,13 +424,13 @@ function calculateEfficiency(data: CSVDataPoint[]): { data: Efficiency; componen
 
     const dt = (current.timestamp - previous.timestamp) / 3600; // в часах
     const power = Math.abs(current.voltage * current.current);
-    if (isFinite(power) && isFinite(dt)) {
+    if (Number.isFinite(power) && Number.isFinite(dt)) {
       cycleEnergy += power * dt;
     }
   }
 
   // CC фаза с относительно постоянным током
-  const currents = data.map((p) => Math.abs(p.current)).filter((c) => isFinite(c));
+  const currents = data.map((p) => Math.abs(p.current)).filter((c) => Number.isFinite(c));
   const maxCurrent = currents.length > 0 ? Math.max(...currents) : 0;
   const ccThreshold = maxCurrent * 0.7; // Повышаем порог для более точного определения CC
 
@@ -437,10 +438,10 @@ function calculateEfficiency(data: CSVDataPoint[]): { data: Efficiency; componen
   const ccPhaseEfficiency = data.length > 0 ? (ccPhaseData.length / data.length) * 100 : 0;
 
   // Равномерность тока в CC фазе
-  const ccCurrents = ccPhaseData.map((p) => Math.abs(p.current)).filter((c) => isFinite(c));
+  const ccCurrents = ccPhaseData.map((p) => Math.abs(p.current)).filter((c) => Number.isFinite(c));
   const ccAvgCurrent = ccCurrents.length > 0 ? ccCurrents.reduce((sum, c) => sum + c, 0) / ccCurrents.length : 0;
   const ccCurrentVariance =
-    ccCurrents.length > 0 ? ccCurrents.reduce((sum, c) => sum + Math.pow(c - ccAvgCurrent, 2), 0) / ccCurrents.length : 0;
+    ccCurrents.length > 0 ? ccCurrents.reduce((sum, c) => sum + (c - ccAvgCurrent) ** 2, 0) / ccCurrents.length : 0;
   const ccCurrentUniformity = ccAvgCurrent > 0 ? (Math.sqrt(Math.max(0, ccCurrentVariance)) / ccAvgCurrent) * 100 : 0;
 
   // Время 80% заряда
@@ -501,8 +502,8 @@ function calculateParams(data: CSVDataPoint[]): { data: CalculatedParams; compon
   if (!Array.isArray(data) || data.length === 0) return { data: {} as CalculatedParams, component: [] };
 
   // Внутреннее сопротивление (приближенный расчет)
-  const voltages = data.map((p) => p.voltage).filter((v) => isFinite(v));
-  const currents = data.map((p) => Math.abs(p.current)).filter((c) => isFinite(c));
+  const voltages = data.map((p) => p.voltage).filter((v) => Number.isFinite(v));
+  const currents = data.map((p) => Math.abs(p.current)).filter((c) => Number.isFinite(c));
 
   const voltageRange = voltages.length > 0 ? Math.max(...voltages) - Math.min(...voltages) : 0;
   const currentRange = currents.length > 0 ? Math.max(...currents) - Math.min(...currents) : 0;
@@ -510,7 +511,7 @@ function calculateParams(data: CSVDataPoint[]): { data: CalculatedParams; compon
 
   // C-рейт (приблизительно, исходя из максимального тока и емкости)
   const maxCurrent = currents.length > 0 ? Math.max(...currents) : 0;
-  const capacities = data.map((p) => p.ah).filter((ah) => isFinite(ah));
+  const capacities = data.map((p) => p.ah).filter((ah) => Number.isFinite(ah));
   const maxCapacity = capacities.length > 0 ? Math.max(...capacities) : 0;
   const cRate = maxCapacity > 0 ? maxCurrent / maxCapacity : 0;
 
@@ -529,7 +530,7 @@ function calculateParams(data: CSVDataPoint[]): { data: CalculatedParams; compon
 
     const dt = (current.timestamp - previous.timestamp) / 3600;
     const power = Math.abs(current.voltage * current.current);
-    if (isFinite(power) && isFinite(dt)) {
+    if (Number.isFinite(power) && Number.isFinite(dt)) {
       totalEnergy += power * dt;
     }
   }
@@ -578,7 +579,7 @@ function calculatePhases(data: CSVDataPoint[]): PhaseData[] {
   const totalTime = lastPoint.timestamp - firstPoint.timestamp;
 
   // CC фаза (постоянный ток) - ток выше 70% от максимального
-  const currents = data.map((p) => Math.abs(p.current)).filter((c) => isFinite(c));
+  const currents = data.map((p) => Math.abs(p.current)).filter((c) => Number.isFinite(c));
   const maxCurrent = currents.length > 0 ? Math.max(...currents) : 0;
   const ccThreshold = maxCurrent * 0.7; // Повышаем порог
 
@@ -615,11 +616,11 @@ function calculatePhases(data: CSVDataPoint[]): PhaseData[] {
   })();
 
   const cvSlice = data.slice(ccEndIndex);
-  const cvVoltages = cvSlice.map((p) => p.voltage).filter((v) => isFinite(v));
+  const cvVoltages = cvSlice.map((p) => p.voltage).filter((v) => Number.isFinite(v));
   const cvVoltageAvg = cvVoltages.length > 0 ? cvVoltages.reduce((sum, p) => sum + p, 0) / cvVoltages.length : 0;
 
   const ccSlice = data.slice(ccStartIndex, ccEndIndex);
-  const ccCurrentData = ccSlice.map((p) => Math.abs(p.current)).filter((c) => isFinite(c));
+  const ccCurrentData = ccSlice.map((p) => Math.abs(p.current)).filter((c) => Number.isFinite(c));
   const ccCurrentAvg = ccCurrentData.length > 0 ? ccCurrentData.reduce((sum, p) => sum + p, 0) / ccCurrentData.length : 0;
 
   const cvCurrentStart = (() => {
@@ -652,8 +653,8 @@ function calculatePhases(data: CSVDataPoint[]): PhaseData[] {
 function calculateThermalCharacteristics(data: CSVDataPoint[]): ThermalData[] {
   if (!Array.isArray(data) || data.length === 0) return [];
 
-  const tempQ1Values = data.map((p) => p.tempQ1).filter((t) => t > 0 && isFinite(t));
-  const tempAkbValues = data.map((p) => p.tempAkb).filter((t) => t > 0 && isFinite(t));
+  const tempQ1Values = data.map((p) => p.tempQ1).filter((t) => t > 0 && Number.isFinite(t));
+  const tempAkbValues = data.map((p) => p.tempAkb).filter((t) => t > 0 && Number.isFinite(t));
 
   const tempQ1Start = tempQ1Values.length > 0 ? Math.min(...tempQ1Values) : 0;
   const tempQ1Max = tempQ1Values.length > 0 ? Math.max(...tempQ1Values) : 0;
@@ -663,7 +664,7 @@ function calculateThermalCharacteristics(data: CSVDataPoint[]): ThermalData[] {
   const tempAkbMax = tempAkbValues.length > 0 ? Math.max(...tempAkbValues) : 0;
 
   // Нагрев на ампер
-  const currents = data.map((p) => Math.abs(p.current)).filter((c) => isFinite(c));
+  const currents = data.map((p) => Math.abs(p.current)).filter((c) => Number.isFinite(c));
   const maxCurrent = currents.length > 0 ? Math.max(...currents) : 0;
   const heatPerAmp = maxCurrent > 0 ? tempQ1Growth / maxCurrent : 0;
 
