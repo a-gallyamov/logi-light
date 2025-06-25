@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { memo, useMemo } from 'react';
 import ReactECharts from 'echarts-for-react';
 import type { Phase, CSVDataPoint } from '@shared/lib/parseCSVFile';
 
@@ -70,7 +70,7 @@ interface TooltipParams {
   seriesType: string;
 }
 
-const BatteryCharts = ({ phases, selectedPhase }: { phases: Phase[]; selectedPhase: number | 'all' }) => {
+const BatteryCharts = memo(({ phases, selectedPhase }: { phases: Phase[]; selectedPhase: number | 'all' }) => {
   const analysisData = useMemo((): CSVDataPoint[] => {
     if (selectedPhase === 'all') {
       return Array.isArray(phases)
@@ -539,6 +539,6 @@ const BatteryCharts = ({ phases, selectedPhase }: { phases: Phase[]; selectedPha
       </div>
     </div>
   );
-};
+});
 
 export default BatteryCharts;

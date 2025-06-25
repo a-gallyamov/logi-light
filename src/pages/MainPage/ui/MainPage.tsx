@@ -22,7 +22,7 @@ const MainPage = () => {
 
         const newTab = {
           label: fileName.replace('.csv', ''),
-          children: <StatsAndCharts csvData={csvContent} />,
+          children: <StatsAndCharts fileId={newTabKey} csvData={csvContent} />,
           key: newTabKey,
           closable: true,
         };
