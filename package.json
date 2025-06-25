@@ -9,7 +9,7 @@
 		"lint:tsc": "tsc -b",
 		"build": "vite build",
 		"preview": "vite preview",
-		"predeploy": "npm build",
+		"predeploy": "npm run build",
 		"deploy": "gh-pages -d dist"
 	},
 	"dependencies": {
